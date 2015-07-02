@@ -1,0 +1,6 @@
+* ReinH's emacs configuration
+
+See [[file:conf/init.org][conf/init.org]]
+
+For OS X, I use [[https://github.com/numixproject/numix-icon-theme-circle/blob/master/Numix-Circle/48x48/apps/emacs.svg][this icon from Numix Circle]], compiled into a =.icns=
+file using [[https://iconverticons.com/online/][iconverticons]].
