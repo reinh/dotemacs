@@ -1,0 +1,5 @@
+.mc-lists.el
+custom.el
+/backups/
+/elpa/
+/auto-save-list/
