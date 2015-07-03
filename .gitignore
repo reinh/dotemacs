@@ -3,6 +3,10 @@ custom.el
 /backups/
 /elpa/
 /auto-save-list/
+projectile-bookmarks.eld
+org-clock-save.el
+
+conf/*.el
 
 # Created by https://www.gitignore.io
 

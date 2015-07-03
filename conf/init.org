@@ -77,12 +77,11 @@ Use a visual bell.
   (setq visible-bell t)
 #+END_SRC
 
-** Windows
+** Window management
 
 #+BEGIN_SRC emacs-lisp
   (use-package move-border
     :load-path "lib/move-border"
-    :ensure t
     :defer t
     :commands (move-border-left
                move-border-right
@@ -91,8 +90,7 @@ Use a visual bell.
     :bind (("M-S-<up>"    . move-border-up)
            ("M-S-<down>"  . move-border-down)
            ("M-S-<left>"  . move-border-left)
-           ("M-S-<right>" . move-border-right))
-    )
+           ("M-S-<right>" . move-border-right)))
 #+END_SRC
 
 ** UTF-8
@@ -229,399 +227,8 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
 #+END_SRC
 
 * Packages
-** misc
-
-#+BEGIN_SRC emacs-lisp
-  (use-package pos-tip            :ensure t :defer 5)
-  (use-package edit-server        :ensure t :defer 5)
-  (use-package gmail-message-mode :ensure t :defer 5)
-  (use-package chess              :ensure t :defer 5)
-  (use-package narrow-indirect    :ensure t :defer 5)
-
-  (use-package css-mode :ensure t :mode ("\\.css\\'" . css-mode))
-  (use-package lua-mode :ensure t :mode ("\\.lua\\'" . lua-mode)
-    :interpreter ("lua" . lua-mode))
-
-  (use-package discover
-    :ensure t
-    :config
-    (global-discover-mode 1))
-
-  (use-package paredit
-    :ensure t
-    :diminish paredit-mode
-    :commands paredit-mode)
-
-  (use-package ido
-    :ensure t
-    :demand t
-    :bind (("C-x b" . ido-switch-buffer))
-    :config
-    (ido-mode t))
-
-  (use-package ido-hacks
-    :ensure t
-    :disabled t
-    :config
-    (ido-hacks-mode 1))
-
-  (use-package js2-mode
-    :ensure t
-    :mode "\\.js\\'")
-
-  (use-package json-mode
-    :ensure t
-    :mode "\\.json\\'")
-
-  (use-package on-screen
-    :ensure t
-    :defer 5
-    :config
-    (on-screen-global-mode 1))
-
-  (use-package smex
-    :ensure t
-    :demand
-    :bind (("M-x" . smex)))
-
-  (use-package rainbow-mode
-    :ensure t
-    :commands rainbow-mode)
-
-  (use-package twittering-mode
-    :ensure t
-    :commands twit
-    :config
-    (setq twittering-use-master-password t)
-    (setq twittering-icon-mode t)
-    (setq twittering-use-icon-storage t))
-
-  (use-package undo-tree
-    :ensure t
-    :commands undo-tree-mode
-    :diminish undo-tree-mode
-    :config
-    (global-undo-tree-mode))
-
-  (use-package w3m
-    :disabled t
-    :commands (w3m-search w3m-find-file)
-    :bind (("C-. u"   . w3m-browse-url)
-           ("C-. U"   . w3m-browse-url-new-session))
-    :init
-    (setq w3m-command "w3m")
-
-    (setq w3m-coding-system 'utf-8
-          w3m-file-coding-system 'utf-8
-          w3m-file-name-coding-system 'utf-8
-          w3m-input-coding-system 'utf-8
-          w3m-output-coding-system 'utf-8
-          w3m-terminal-coding-system 'utf-8))
-
-  (use-package winner
-    :if (not noninteractive)
-    :defer 5
-    :bind (("M-N" . winner-redo)
-           ("M-P" . winner-undo))
-    :config
-    (winner-mode 1))
-
-  (use-package yaml-mode
-    :ensure t
-    :mode ("\\.ya?ml\\'" . yaml-mode))
-
-#+END_SRC
-
-** ace-jump-mode
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ace-jump-mode
-    :ensure t
-    :bind (("C-c SPC" . ace-jump-mode))
-    :config
-    (setq ace-jump-mode-submode-list
-          '(ace-jump-char-mode
-            ace-jump-word-mode
-            ace-jump-line-mode)))
-#+END_SRC
-
-** ace-window
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ace-window
-    :ensure t
-    :bind (("M-o" . ace-window))
-    :config (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-#+END_SRC
-
-** ido
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ibuffer
-    :ensure t
-    :commands ibuffer
-    :config
-    (progn
-      (setq ibuffer-saved-filter-groups
-            '(("Config" (or
-                         (filename . ".dots/")
-                         (filename . ".emacs.d/")))
-              ("Shell"  (or
-                         (mode . eshell-mode)
-                         (mode . shell-mode)))
-              ("Dired"  (mode . dired-mode))
-              ("Prose"  (or
-                         (mode . tex-mode)
-                         (mode . plain-tex-mode)
-                         (mode . latex-mode)
-                         (mode . rst-mode)
-                         (mode . markdown-mode)))
-              ("Haskell" (mode . haskell-mode))
-              ("Org"    (mode . org-mode))
-              ("Weechat" (name . ".*freenode.*"))
-              ("Gnus"   (or
-                         (mode . message-mode)
-                         (mode . gnus-group-mode)
-                         (mode . gnus-summary-mode)
-                         (mode . gnus-article-mode)))
-              ("Emacs"  (name . "^\\*.*\\*$")))
-            ibuffer-show-empty-filter-groups nil
-            ibuffer-expert t)
-
-      (use-package ibuffer-vc
-        :ensure t
-        :commands ibuffer-vc-generate-filter-groups-by-vc-root
-        :init
-        (progn
-          (defun nox/ibuffer-apply-filter-groups ()
-            "Combine my saved ibuffer filter groups with those generated
-       by `ibuffer-vc-generate-filter-groups-by-vc-root'"
-            (interactive)
-            (setq ibuffer-filter-groups
-                  (append (ibuffer-vc-generate-filter-groups-by-vc-root)
-                          ibuffer-saved-filter-groups))
-            (message "ibuffer-vc: groups set")
-            (let ((ibuf (get-buffer "*Ibuffer*")))
-              (when ibuf
-                (with-current-buffer ibuf
-                  (pop-to-buffer ibuf)
-                  (ibuffer-update nil t)))))
-
-          (add-hook 'ibuffer-hook 'nox/ibuffer-apply-filter-groups)))))
-
-#+END_SRC
-
-** ag
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ag
-    :ensure t
-    :commands (ag ag-regexp)
-    :init
-    (use-package helm-ag
-      :ensure t
-      :commands helm-ag))
-#+END_SRC
-
-** company
-
-#+BEGIN_SRC emacs-lisp
-  (use-package company
-    :ensure t
-    :diminish company-mode
-    :commands company-mode
-    :config
-    ;; From https://github.com/company-mode/company-mode/issues/87
-    ;; See also https://github.com/company-mode/company-mode/issues/123
-    (defadvice company-pseudo-tooltip-unless-just-one-frontend
-        (around only-show-tooltip-when-invoked activate)
-      (when (company-explicit-action-p)
-        ad-do-it))
-
-    (use-package company-go
-      :ensure t)
-
-    (use-package helm-company
-      :ensure t
-      :load-path "site-lisp/helm-company"
-      :disabled t))
-#+END_SRC
-
-** god and evil
-
-*** God mode
-
-[[https://github.com/chrisdone/god-mode][God mode]] is a global minor mode for entering Emacs commands without
-modifier keys.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package god-mode
-    :ensure t
-    :commands god-mode
-    :bind ("C-z" . god-local-mode))
-#+END_SRC
-
-*** Evil mode
-
-[[http://www.emacswiki.org/emacs/Evil][Evil mode]] is a minor mode providing Vim emulation for Emacs. It
-reproduces Vim’s modal editing and even certain Ex commands.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package evil
-    :ensure t
-    :commands evil-mode
-    :config
-    (progn
-      ;; Override the starting state in a few major modes
-      (evil-set-initial-state 'magit-mode 'emacs)
-      (evil-set-initial-state 'org-agenda-mode 'emacs)
-      (evil-set-initial-state 'package-menu-mode 'motion)
-      (evil-set-initial-state 'paradox-menu-mode 'motion)
-
-      ;; Reclaim useful keys from evil-motion-state-map
-      (define-key evil-motion-state-map (kbd "RET") nil)
-      (define-key evil-motion-state-map (kbd "TAB") nil)
-
-      (global-set-key (kbd "RET") 'newline-and-indent)
-      (define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
-
-      (define-key evil-normal-state-map "Y" (kbd "y$"))))
-
-  (use-package evil-surround
-    :ensure t
-    :defer 2
-    :commands global-evil-surround-mode
-    :config (global-evil-surround-mode 1))
-
-#+END_SRC
-
-** gnus
-
-#+BEGIN_SRC emacs-lisp
-  (use-package gnus
-    :ensure t
-    :defer t
-    :commands gnus
-    :bind (("M-G"   . switch-to-gnus)
-           ("C-x m" . compose-mail)))
-#+END_SRC
-
-** lisp-mode
-
-#+BEGIN_SRC emacs-lisp
-  (use-package lisp-mode
-    :defer t
-    :init
-    (progn
-      (use-package eldoc
-        :commands turn-on-eldoc-mode
-        :init (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)))
-    :config
-    (defun my-lisp-mode-hook ()
-      (paredit-mode 1)
-      (speed-of-thought-mode 1)
-      (local-set-key (kbd "<return>") 'paredit-newline)
-      (add-hook 'after-save-hook 'check-parens nil t))
-    (add-hook 'lisp-mode-hook 'my-lisp-mode-hook)
-    (add-hook 'emacs-lisp-mode-hook 'my-lisp-mode-hook)
-    (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
-    (add-hook 'emacs-lisp-mode-hook (lambda() (setq mode-name "elisp"))))
-
-  (use-package sotlisp
-    :ensure t
-    :defer t
-    :diminish sotlisp-mode)
-#+END_SRC
-
-** magit
-
-#+BEGIN_SRC emacs-lisp
-  (use-package magit
-    :ensure t
-    :diminish magit-auto-revert-mode
-    :bind (("C-x g" . magit-status))
-    :init
-    (setq magit-auto-revert-mode nil)
-    (setq magit-last-seen-setup-instructions "1.4.0")
-    :config
-    (setenv "GIT_PAGER" "")
-    ;; full screen magit-status
-    ;; From http://whattheemacsd.com/setup-magit.el-01.html
-    (defadvice magit-status (around magit-fullscreen activate)
-      (window-configuration-to-register :magit-fullscreen)
-      ad-do-it
-      (delete-other-windows))
-    (defun magit-quit-session ()
-      "Restores the previous window configuration and kills the magit buffer"
-      (interactive)
-      (kill-buffer)
-      (jump-to-register :magit-fullscreen))
-
-    (define-key magit-status-mode-map (kbd "q") 'magit-quit-session))
-#+END_SRC
-
-** markdown-mode
-
-#+BEGIN_SRC emacs-lisp
-  (use-package markdown-mode
-    :ensure t
-    :mode (("\\`README\\.md\\'" . gfm-mode)
-           ("\\.md\\'"          . markdown-mode)
-           ("\\.markdown\\'"    . markdown-mode)))
-#+END_SRC
-
-** multiple-cursors
-
-   #+BEGIN_SRC emacs-lisp
-  (use-package multiple-cursors
-    :ensure t
-    :bind (("C-S-c C-S-c" . mc/edit-lines)
-           ("C->"         . mc/mark-next-like-this)
-           ("C-<"         . mc/mark-previous-like-this)
-           ("C-c C-<"     . mc/mark-all-like-this)))
-#+END_SRC
-
-** yasnippet
-
-#+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :ensure t
-    :defer 2
-    :diminish yas-minor-mode
-    :config
-    (progn
-      ;; Suppress excessive log messages
-      (setq yas-verbosity 1
-            yas-prompt-functions '(yas-ido-prompt)
-            yas-snippet-dir (expand-file-name "snippets" user-emacs-directory))
-      (yas-global-mode t)))
-#+END_SRC
-
-** flycheck and flyspell
-#+BEGIN_SRC emacs-lisp
-  (use-package flycheck
-    :ensure t
-    :defer 2
-    :diminish flycheck-mode " ✓"
-    :commands global-flycheck-mode
-    :config
-    (progn
-      (global-flycheck-mode 1)
-      (setq-default flycheck-disabled-checkers
-                    '(html-tidy
-                      emacs-lisp-checkdoc))))
-
-  (use-package flyspell
-    :defer 2
-    :init
-    :config
-    (progn
-      (setq ispell-program-name "aspell")
-      (add-hook 'text-mode-hook 'flyspell-mode)
-      (add-hook 'prog-mode-hook 'flyspell-prog-mode)))
-#+END_SRC
-
-** go
+** Languages
+*** go
 
 #+BEGIN_SRC emacs-lisp
   (use-package go-mode
@@ -642,7 +249,7 @@ reproduces Vim’s modal editing and even certain Ex commands.
     (load-file "$GOPATH/src/golang.org/x/tools/refactor/rename/rename.el"))
 #+END_SRC
 
-** haskell
+*** haskell
 
 #+BEGIN_SRC emacs-lisp
   (use-package haskell-mode
@@ -782,7 +389,7 @@ reproduces Vim’s modal editing and even certain Ex commands.
       (use-package hindent :ensure t)))
 #+END_SRC
 
-** rust
+*** rust
 
 #+BEGIN_SRC emacs-lisp
   (use-package rust-mode
@@ -791,7 +398,20 @@ reproduces Vim’s modal editing and even certain Ex commands.
     :init (require 'rust-mode))
 #+END_SRC
 
-** LaTeX
+*** Ruby
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rinari :ensure t :defer t)
+  (use-package bundler :ensure t :defer t)
+  (use-package robe
+    :ensure t :defer t
+    :init
+    (add-to-list 'company-backends 'company-robe)
+    :config
+    (progn (add-hook 'ruby-mode-hook 'robe-mode)))
+#+END_SRC
+
+*** LaTeX
 
 #+BEGIN_SRC emacs-lisp
   ;; Basic settings
@@ -822,14 +442,580 @@ reproduces Vim’s modal editing and even certain Ex commands.
                               (cons "\\(" "\\)")))))
 #+END_SRC
 
-** org
+*** JavaScript
+
+#+BEGIN_SRC emacs-lisp
+  (use-package js2-mode
+    :ensure t
+    :defer t
+    :commands js2-mode
+    :init
+    (progn
+      (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+      (setq-default js2-basic-offset 2)
+      (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode)))
+    :config
+    (progn
+      (js2-imenu-extras-setup)
+      ;; (bind-key "C-x C-e" 'js-send-last-sexp js2-mode-map)
+      ;; (bind-key "C-M-x" 'js-send-last-sexp-and-go js2-mode-map)
+      ;; (bind-key "C-c b" 'js-send-buffer js2-mode-map)
+      ;; (bind-key "C-c C-b" 'js-send-buffer-and-go js2-mode-map)
+      ;; (bind-key "C-c w" 'my/copy-javascript-region-or-buffer js2-mode-map)
+      ;; (bind-key "C-c l" 'js-load-file-and-go js2-mode-map)
+      ))
+
+  (use-package tern
+    :ensure t
+    :defer t
+    :config
+    (progn
+      (add-hook 'js2-mode-hook 'tern-mode)))
+
+  (use-package company-tern
+    :ensure t
+    :defer t
+    :init (add-to-list 'company-backends 'company-tern))
+#+END_SRC
+
+*** Lispen
+
+#+BEGIN_SRC emacs-lisp
+  (use-package lisp-mode
+    :defer t
+    :init
+    (progn
+      (use-package eldoc
+        :commands turn-on-eldoc-mode
+        :init (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)))
+    :config
+    (defun my-lisp-mode-hook ()
+      (paredit-mode 1)::load
+      (speed-of-thought-mode 1)
+      (local-set-key (kbd "<return>") 'paredit-newline)
+      (add-hook 'after-save-hook 'check-parens nil t))
+    (add-hook 'lisp-mode-hook 'my-lisp-mode-hook)
+    (add-hook 'emacs-lisp-mode-hook 'my-lisp-mode-hook)
+    (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
+    (add-hook 'emacs-lisp-mode-hook (lambda() (setq mode-name "elisp"))))
+
+  (use-package sotlisp
+    :ensure t
+    :defer t
+    :diminish sotlisp-mode)
+
+  (use-package edit-list :ensure t :defer t :commands edit-list)
+#+END_SRC
+** misc
+
+#+BEGIN_SRC emacs-lisp
+  (use-package pos-tip            :ensure t :defer 5)
+  (use-package edit-server        :ensure t :defer 5)
+  (use-package gmail-message-mode :ensure t :defer 5)
+  (use-package chess              :ensure t :defer 5)
+  (use-package narrow-indirect    :ensure t :defer 5)
+
+  (use-package css-mode :ensure t :mode ("\\.css\\'" . css-mode))
+  (use-package lua-mode :ensure t :mode ("\\.lua\\'" . lua-mode)
+    :interpreter ("lua" . lua-mode))
+
+  (use-package discover
+    :ensure t
+    :config
+    (global-discover-mode 1))
+
+  (use-package paredit
+    :ensure t
+    :diminish paredit-mode
+    :commands paredit-mode)
+
+  (use-package ido
+    :ensure t
+    :demand t
+    :bind (("C-x b" . ido-switch-buffer))
+    :config
+    (ido-mode t))
+
+  (use-package ido-hacks
+    :ensure t
+    :disabled t
+    :config
+    (ido-hacks-mode 1))
+
+  (use-package js2-mode
+    :ensure t
+    :mode "\\.js\\'")
+
+  (use-package json-mode
+    :ensure t
+    :mode "\\.json\\'")
+
+  (use-package on-screen
+    :ensure t
+    :defer 5
+    :config
+    (on-screen-global-mode 1))
+
+  (use-package smex
+    :ensure t
+    :demand
+    :bind (("M-x" . smex)))
+
+  (use-package rainbow-mode
+    :ensure t
+    :commands rainbow-mode)
+
+  (use-package twittering-mode
+    :ensure t
+    :commands twit
+    :config
+    (setq twittering-use-master-password t)
+    (setq twittering-icon-mode t)
+    (setq twittering-use-icon-storage t))
+
+  (use-package undo-tree
+    :ensure t
+    :commands undo-tree-mode
+    :diminish undo-tree-mode
+    :config
+    (global-undo-tree-mode))
+
+  (use-package w3m
+    :disabled t
+    :commands (w3m-search w3m-find-file)
+    :bind (("C-. u"   . w3m-browse-url)
+           ("C-. U"   . w3m-browse-url-new-session))
+    :init
+    (setq w3m-command "w3m")
+
+    (setq w3m-coding-system 'utf-8
+          w3m-file-coding-system 'utf-8
+          w3m-file-name-coding-system 'utf-8
+          w3m-input-coding-system 'utf-8
+          w3m-output-coding-system 'utf-8
+          w3m-terminal-coding-system 'utf-8))
+
+  (use-package winner
+    :if (not noninteractive)
+    :defer 5
+    :bind (("M-N" . winner-redo)
+           ("M-P" . winner-undo))
+    :config
+    (winner-mode 1))
+
+  (use-package yaml-mode
+    :ensure t
+    :mode ("\\.ya?ml\\'" . yaml-mode))
+
+#+END_SRC
+
+** ace-jump-mode
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ace-jump-mode
+    :ensure t
+    :bind (("C-c SPC" . ace-jump-mode))
+    :config
+    (setq ace-jump-mode-submode-list
+          '(ace-jump-char-mode
+            ace-jump-word-mode
+            ace-jump-line-mode)))
+#+END_SRC
+
+** ace-window
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ace-window
+    :ensure t
+    :bind (("M-o" . ace-window))
+    :config (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+#+END_SRC
+
+** zapping
+
+#+BEGIN_SRC emacs-lisp
+  (use-package zapping
+    :load-path "lib/zapping"
+    :bind ("M-z" . zap-up-to-char)
+    :config
+    (define-key isearch-mode-map [(meta z)] 'zap-to-isearch))
+#+END_SRC
+
+** ido
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ibuffer
+    :ensure t
+    :commands ibuffer
+    :bind ("C-x C-b" . ibuffer)
+    :config
+    (progn
+      (setq ibuffer-saved-filter-groups
+            '(("Config" (or
+                         (filename . ".dots/")
+                         (filename . ".emacs.d/")))
+              ("Shell"  (or
+                         (mode . eshell-mode)
+                         (mode . shell-mode)))
+              ("Dired"  (mode . dired-mode))
+              ("Prose"  (or
+                         (mode . tex-mode)
+                         (mode . plain-tex-mode)
+                         (mode . latex-mode)
+                         (mode . rst-mode)
+                         (mode . markdown-mode)))
+              ("Haskell" (mode . haskell-mode))
+              ("Org"    (mode . org-mode))
+              ("Gnus"   (or
+                         (mode . message-mode)
+                         (mode . gnus-group-mode)
+                         (mode . gnus-summary-mode)
+                         (mode . gnus-article-mode)))
+              ("Emacs"  (name . "^\\*.*\\*$"))
+              ("Weechat" (name . "^freenode\.")))
+            ibuffer-show-empty-filter-groups nil
+            ibuffer-expert t)
+
+      (defadvice ibuffer-update-title-and-summary (after remove-column-titles)
+        (save-excursion
+          (set-buffer "*Ibuffer*")
+          (toggle-read-only 0)
+          (goto-char 1)
+          (search-forward "-\n" nil t)
+          (delete-region 1 (point))
+          (let ((window-min-height 1))
+            ;; save a little screen estate
+            (shrink-window-if-larger-than-buffer))
+          (toggle-read-only)))
+      (ad-activate 'ibuffer-update-title-and-summary)
+
+      ;; Use human readable Size column instead of original one
+      (define-ibuffer-column size-h
+        (:name "Size" :inline t)
+        (cond
+         ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+         ((> (buffer-size) 100000) (format "%7.0fk" (/ (buffer-size) 1000.0)))
+         ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+         (t (format "%8d" (buffer-size)))))
+
+      ;; Modify the default ibuffer-formats
+      (setq ibuffer-formats
+            '((mark modified read-only " "
+                    (name 18 18 :left :elide)
+                    " "
+                    (size-h 9 -1 :right)
+                    " "
+                    (mode 16 16 :left :elide)
+                    " "
+                    filename-and-process)))
+
+
+      (use-package ibuffer-vc
+        :ensure t
+        :commands ibuffer-vc-generate-filter-groups-by-vc-root
+        :init
+        (progn
+          (defun nox/ibuffer-apply-filter-groups ()
+            "Combine my saved ibuffer filter groups with those generated
+       by `ibuffer-vc-generate-filter-groups-by-vc-root'"
+            (interactive)
+            (setq ibuffer-filter-groups
+                  (append (ibuffer-vc-generate-filter-groups-by-vc-root)
+                          ibuffer-saved-filter-groups))
+            (message "ibuffer-vc: groups set")
+            (let ((ibuf (get-buffer "*Ibuffer*")))
+              (when ibuf
+                (with-current-buffer ibuf
+                  (pop-to-buffer ibuf)
+                  (ibuffer-update nil t)))))
+
+          (add-hook 'ibuffer-hook 'nox/ibuffer-apply-filter-groups)))
+      ))
+
+#+END_SRC
+
+** ag
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ag
+    :ensure t
+    :commands (ag ag-regexp)
+    :init
+    (use-package helm-ag
+      :ensure t
+      :commands helm-ag))
+#+END_SRC
+
+** company
+
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :ensure t
+    :diminish company-mode
+    :config
+    (add-hook 'prog-mode-hook 'company-mode))
+
+  (use-package company-go :ensure t)
+
+  (use-package helm-company
+    :ensure t
+    :config
+    (progn
+      (define-key company-mode-map (kbd "C-:") 'helm-company)
+      (define-key company-active-map (kbd "C-:") 'helm-company)))
+
+#+END_SRC
+
+** god and evil
+
+*** God mode
+
+[[https://github.com/chrisdone/god-mode][God mode]] is a global minor mode for entering Emacs commands without
+modifier keys.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package god-mode
+    :ensure t
+    :commands god-mode
+    :bind ("C-z" . god-local-mode))
+#+END_SRC
+
+*** Evil mode
+
+[[http://www.emacswiki.org/emacs/Evil][Evil mode]] is a minor mode providing Vim emulation for Emacs. It
+reproduces Vim’s modal editing and even certain Ex commands.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :ensure t
+    :commands evil-mode
+    :config
+    (progn
+      ;; Override the starting state in a few major modes
+      (evil-set-initial-state 'magit-mode 'emacs)
+      (evil-set-initial-state 'org-agenda-mode 'emacs)
+      (evil-set-initial-state 'package-menu-mode 'motion)
+      (evil-set-initial-state 'paradox-menu-mode 'motion)
+
+      ;; Reclaim useful keys from evil-motion-state-map
+      (define-key evil-motion-state-map (kbd "RET") nil)
+      (define-key evil-motion-state-map (kbd "TAB") nil)
+
+      (global-set-key (kbd "RET") 'newline-and-indent)
+      (define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
+
+      (define-key evil-normal-state-map "Y" (kbd "y$"))))
+
+  (use-package evil-surround
+    :ensure t
+    :defer 2
+    :commands global-evil-surround-mode
+    :config (global-evil-surround-mode 1))
+
+#+END_SRC
+
+** gnus
+
+#+BEGIN_SRC emacs-lisp
+  (use-package gnus
+    :ensure t
+    :defer t
+    :commands gnus
+    :bind (("M-G"   . switch-to-gnus)
+           ("C-x m" . compose-mail)))
+#+END_SRC
+
+** Helm
+
+#+BEGIN_SRC emacs-lisp
+  (use-package helm
+    :ensure t
+    :diminish helm-mode
+    :commands (helm-buffers-list
+               helm-colors
+               helm-find-files
+               helm-for-files
+               helm-google-suggest
+               helm-mini
+               helm-help
+               helm-show-kill-ring
+               helm-org-keywords
+               helm-org-headlines
+               helm-projectile
+               helm-M-x
+               helm-occur)
+    :bind (("C-c h" . helm-mini)
+           ("C-h a" . helm-apropos)
+           ("C-x b" . helm-buffers-list)
+           ("M-y" . helm-show-kill-ring)
+           ("M-x" . helm-M-x)
+           ("C-x c o" . helm-occur)
+           ("C-x c y" . helm-yas-complete)
+           ("C-x c Y" . helm-yas-create-snippet-on-region)
+           ("C-x c b" . my/helm-do-grep-book-notes)
+           ("C-x c SPC" . helm-all-mark-rings))
+
+    :init
+    (progn
+      ;; From https://gist.github.com/antifuchs/9238468
+      (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
+            helm-input-idle-delay 0.01  ; this actually updates things
+                                          ; reeeelatively quickly.
+            helm-yas-display-key-on-candidate t
+            helm-quick-update t
+            helm-M-x-requires-pattern nil
+            helm-ff-skip-boring-files t)
+      (helm-mode))
+    :config
+    (progn
+      (setq helm-M-x-fuzzy-match t)
+      (use-package helm-config)
+      (define-key helm-map (kbd "C-j") 'helm-next-line)
+      (define-key helm-map (kbd "C-k") 'helm-previous-line)))
+
+  (use-package helm-swoop
+    :ensure t
+    :defer t
+    :bind
+    (("C-x c s" . helm-swoop)
+     ("M-i" . helm-swoop)
+     ("M-I" . helm-swoop-back-to-last-point)
+     ("C-c M-i" . helm-multi-swoop)
+     ("C-x M-i" . helm-multi-swoop-all))
+    :config
+    (progn
+      (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+      (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop))
+    )
+#+END_SRC
+** Projectile
+
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :ensure t
+    :defer t
+    :diminish projectile-mode
+    :config
+    (progn
+      (setq projectile-keymap-prefix (kbd "C-c p"))
+      (setq projectile-completion-system 'default)
+      (setq projectile-enable-caching t)
+      (projectile-global-mode)))
+
+  (use-package helm-projectile :ensure t :defer t)
+#+END_SRC
+
+** magit
+
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :ensure t
+    :diminish magit-auto-revert-mode
+    :bind (("C-x g" . magit-status))
+    :init
+    (setq magit-auto-revert-mode nil)
+    (setq magit-last-seen-setup-instructions "1.4.0")
+    :config
+    (setenv "GIT_PAGER" "")
+    ;; full screen magit-status
+    ;; From http://whattheemacsd.com/setup-magit.el-01.html
+    (defadvice magit-status (around magit-fullscreen activate)
+      (window-configuration-to-register :magit-fullscreen)
+      ad-do-it
+      (delete-other-windows))
+    (defun magit-quit-session ()
+      "Restores the previous window configuration and kills the magit buffer"
+      (interactive)
+      (kill-buffer)
+      (jump-to-register :magit-fullscreen))
+
+    (define-key magit-status-mode-map (kbd "q") 'magit-quit-session))
+#+END_SRC
+
+** markdown-mode
+
+#+BEGIN_SRC emacs-lisp
+  (use-package markdown-mode
+    :ensure t
+    :mode (("\\`README\\.md\\'" . gfm-mode)
+           ("\\.md\\'"          . markdown-mode)
+           ("\\.markdown\\'"    . markdown-mode)))
+#+END_SRC
+
+** multiple-cursors
+
+   #+BEGIN_SRC emacs-lisp
+  (use-package multiple-cursors
+    :ensure t
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->"         . mc/mark-next-like-this)
+           ("C-<"         . mc/mark-previous-like-this)
+           ("C-c C-<"     . mc/mark-all-like-this)))
+#+END_SRC
+
+** yasnippet
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :defer 2
+    :diminish yas-minor-mode
+    :config
+    (progn
+      ;; Suppress excessive log messages
+      (setq yas-verbosity 1
+            yas-prompt-functions '(yas-ido-prompt)
+            yas-snippet-dir (expand-file-name "snippets" user-emacs-directory))
+      (yas-global-mode t)))
+#+END_SRC
+
+** flycheck and flyspell
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :defer 2
+    :diminish flycheck-mode " ✓"
+    :commands global-flycheck-mode
+    :config
+    (progn
+      (global-flycheck-mode 1)
+      (setq-default flycheck-disabled-checkers
+                    '(html-tidy
+                      emacs-lisp-checkdoc))))
+
+  (use-package flyspell
+    :defer 2
+    :init
+    :config
+    (progn
+      (setq ispell-program-name "aspell")
+      (add-hook 'text-mode-hook 'flyspell-mode)
+      (add-hook 'prog-mode-hook 'flyspell-prog-mode)))
+#+END_SRC
+
+** Org Mode
 
 #+BEGIN_SRC emacs-lisp
   (use-package org
     :ensure t
+    :bind (
+           ;; Generic
+           ("<f8>"  . org-cycle-agenda-files)
+           ("<f12>" . org-agenda)
+           ("C-c a" . org-agenda)
+           ("C-c b" . org-iswitchb)
+           ("C-c c" . org-capture)
+           ("C-c S" . org-store-link)
+           ("C-c l" . org-insert-link)
 
-    :config
-    (setq org-src-fontify-natively t))
+           ;; Clocking
+           ("<f11>" . org-clock-goto)
+           ("<C-<f11>" . org-clock-in))
+    :init
+    (org-babel-load-file
+     (expand-file-name "conf/org.org" user-emacs-directory))
+    )
+
 #+END_SRC
 
 ** undo-tree
