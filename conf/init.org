@@ -1,4 +1,10 @@
-#+TITLE: Emacs Configuration
+  #+TITLE: Emacs Configuration
+
+* Disable DBUS
+
+#+BEGIN_SRC emacs-lisp
+  (setq notify-method 'notify-via-message)
+#+END_SRC
 
 * User Information
 
@@ -403,12 +409,25 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
 #+BEGIN_SRC emacs-lisp
   (use-package rinari :ensure t :defer t)
   (use-package bundler :ensure t :defer t)
+
+  (use-package projectile-rails :ensure t :defer t
+    :config
+    (add-hook 'projectile-mode-hook 'projectile-rails-on))
+
   (use-package robe
     :ensure t :defer t
     :init
     (add-to-list 'company-backends 'company-robe)
     :config
     (progn (add-hook 'ruby-mode-hook 'robe-mode)))
+
+  (use-package rspec-mode
+    :ensure t :defer t
+    :mode rspec-mode
+    :config
+    (progn (rspec-install-snippets)
+           (add-hook 'after-init-hook 'inf-ruby-switch-setup)
+           (setq compilation-scroll-output t)))
 #+END_SRC
 
 *** LaTeX
@@ -439,7 +458,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
                               (cons "$" "$"))))
     (add-hook 'LaTeX-mode-hook
               (lambda () (set (make-variable-buffer-local 'TeX-electric-math)
-                              (cons "\\(" "\\)")))))
+                              (cons "$" "$")))))
 #+END_SRC
 
 *** JavaScript
@@ -489,6 +508,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
         :commands turn-on-eldoc-mode
         :init (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)))
     :config
+    ;; (use-package aggressive-indent :ensure t)
     (defun my-lisp-mode-hook ()
       (paredit-mode 1)::load
       (speed-of-thought-mode 1)
@@ -496,7 +516,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
       (add-hook 'after-save-hook 'check-parens nil t))
     (add-hook 'lisp-mode-hook 'my-lisp-mode-hook)
     (add-hook 'emacs-lisp-mode-hook 'my-lisp-mode-hook)
-    (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
+    ;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
     (add-hook 'emacs-lisp-mode-hook (lambda() (setq mode-name "elisp"))))
 
   (use-package sotlisp
@@ -910,7 +930,6 @@ reproduces Vim’s modal editing and even certain Ex commands.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
-    :diminish magit-auto-revert-mode
     :bind (("C-x g" . magit-status))
     :init
     (setq magit-auto-revert-mode nil)
@@ -928,6 +947,22 @@ reproduces Vim’s modal editing and even certain Ex commands.
       (interactive)
       (kill-buffer)
       (jump-to-register :magit-fullscreen))
+
+    ;; From http://endlessparentheses.com/easily-create-github-prs-from-magit.html
+    (defun endless/visit-pull-request-url ()
+      "Visit the current branch's PR on Github."
+      (interactive)
+      (browse-url
+       (format "https://github.com/%s/compare/%s"
+               (replace-regexp-in-string
+                "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+                (magit-get "remote"
+                           (magit-get-current-remote)
+                           "url"))
+               (magit-get-current-branch))))
+
+    (define-key magit-mode-map (kbd "R")
+       #'endless/visit-pull-request-url)
 
     (define-key magit-status-mode-map (kbd "q") 'magit-quit-session))
 #+END_SRC
@@ -998,23 +1033,27 @@ reproduces Vim’s modal editing and even certain Ex commands.
 #+BEGIN_SRC emacs-lisp
   (use-package org
     :ensure t
-    :bind (
-           ;; Generic
-           ("<f8>"  . org-cycle-agenda-files)
+    :bind (("<f8>"  . org-cycle-agenda-files)
            ("<f12>" . org-agenda)
            ("C-c a" . org-agenda)
            ("C-c b" . org-iswitchb)
            ("C-c c" . org-capture)
            ("C-c S" . org-store-link)
            ("C-c l" . org-insert-link)
+           ("<f5>"   . bh/org-todo)
+           ("S-<f5>" . bh/widen)
 
            ;; Clocking
-           ("<f11>" . org-clock-goto)
-           ("<C-<f11>" . org-clock-in))
+           ("<f9> I"  . bh/punch-in)
+           ("<f9> O"  . bh/punch-out)
+           ("<f11>"   . org-clock-goto)
+           ("C-<f11>" . org-clock-in))
     :init
+    (use-package org-checklist :load-path "lib")
+    (use-package org-bullets :ensure t )
     (org-babel-load-file
-     (expand-file-name "conf/org.org" user-emacs-directory))
-    )
+     (expand-file-name "conf/org.org" user-emacs-directory)))
+
 
 #+END_SRC
 
