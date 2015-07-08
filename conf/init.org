@@ -1,4 +1,4 @@
-  #+TITLE: Emacs Configuration
+#+TITLE: Emacs Configuration
 
 * Disable DBUS
 
@@ -414,6 +414,11 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
     :config
     (add-hook 'projectile-mode-hook 'projectile-rails-on))
 
+  (use-package enh-ruby-mode :ensure t :defer t
+    :config
+    (progn (add-to-list 'auto-mode-alist '("\\.rb$" . enh-ruby-mode))
+           (add-to-list 'interpreter-mode-alist '("ruby" . enh-ruby-mode))))
+
   (use-package robe
     :ensure t :defer t
     :init
@@ -423,11 +428,25 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
 
   (use-package rspec-mode
     :ensure t :defer t
-    :mode rspec-mode
+    :commands rspec-mode
     :config
     (progn (rspec-install-snippets)
-           (add-hook 'after-init-hook 'inf-ruby-switch-setup)
+           (inf-ruby-switch-setup)
            (setq compilation-scroll-output t)))
+
+  (use-package bundler
+    :load-path "lib/bundler"
+    :defer t)
+
+  (use-package ruby-end :ensure t :defer t
+    :config
+    (progn (add-hook 'ruby-mode-hook 'ruby-end-mode)))
+
+  (use-package ruby-refactor :ensure t :defer t
+    :config
+    (progn (add-hook 'ruby-hook-mode 'ruby-refactor-mode-launch)))
+
+
 #+END_SRC
 
 *** LaTeX
@@ -508,16 +527,17 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
         :commands turn-on-eldoc-mode
         :init (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)))
     :config
-    ;; (use-package aggressive-indent :ensure t)
-    (defun my-lisp-mode-hook ()
-      (paredit-mode 1)::load
-      (speed-of-thought-mode 1)
-      (local-set-key (kbd "<return>") 'paredit-newline)
-      (add-hook 'after-save-hook 'check-parens nil t))
-    (add-hook 'lisp-mode-hook 'my-lisp-mode-hook)
-    (add-hook 'emacs-lisp-mode-hook 'my-lisp-mode-hook)
-    ;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
-    (add-hook 'emacs-lisp-mode-hook (lambda() (setq mode-name "elisp"))))
+    (progn
+      (defun my-lisp-mode-hook ()
+        (abbrev-mode 1)
+        (paredit-mode 1)
+        (speed-of-thought-mode 1)
+        (local-set-key (kbd "<return>") 'paredit-newline)
+        (add-hook 'after-save-hook 'check-parens nil t))
+      (add-hook 'lisp-mode-hook 'my-lisp-mode-hook)
+      (add-hook 'emacs-lisp-mode-hook 'my-lisp-mode-hook)
+      ;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
+      (add-hook 'emacs-lisp-mode-hook (lambda() (setq mode-name "elisp")))))
 
   (use-package sotlisp
     :ensure t
@@ -534,6 +554,13 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
   (use-package gmail-message-mode :ensure t :defer 5)
   (use-package chess              :ensure t :defer 5)
   (use-package narrow-indirect    :ensure t :defer 5)
+
+  (use-package abbrev
+    :diminish abbrev-mode
+    :config
+    (progn
+      (if (file-exists-p abbrev-file-name)
+          (quietly-read-abbrev-file))))
 
   (use-package css-mode :ensure t :mode ("\\.css\\'" . css-mode))
   (use-package lua-mode :ensure t :mode ("\\.lua\\'" . lua-mode)
@@ -651,6 +678,12 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
     :config (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 #+END_SRC
 
+** bookmark
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package bookmark
+    :bind (("C-x r m" . bookmark-set)))
+#+end_src
 ** zapping
 
 #+BEGIN_SRC emacs-lisp
@@ -851,7 +884,8 @@ reproduces Vim’s modal editing and even certain Ex commands.
   (use-package helm
     :ensure t
     :diminish helm-mode
-    :commands (helm-buffers-list
+    :commands (helm-bookmarks
+               helm-buffers-list
                helm-colors
                helm-find-files
                helm-for-files
@@ -873,7 +907,8 @@ reproduces Vim’s modal editing and even certain Ex commands.
            ("C-x c y" . helm-yas-complete)
            ("C-x c Y" . helm-yas-create-snippet-on-region)
            ("C-x c b" . my/helm-do-grep-book-notes)
-           ("C-x c SPC" . helm-all-mark-rings))
+           ("C-x c SPC" . helm-all-mark-rings)
+           ("C-x l" . helm-bookmarks))
 
     :init
     (progn
@@ -889,9 +924,7 @@ reproduces Vim’s modal editing and even certain Ex commands.
     :config
     (progn
       (setq helm-M-x-fuzzy-match t)
-      (use-package helm-config)
-      (define-key helm-map (kbd "C-j") 'helm-next-line)
-      (define-key helm-map (kbd "C-k") 'helm-previous-line)))
+      (use-package helm-config)))
 
   (use-package helm-swoop
     :ensure t
@@ -1024,8 +1057,7 @@ reproduces Vim’s modal editing and even certain Ex commands.
     :config
     (progn
       (setq ispell-program-name "aspell")
-      (add-hook 'text-mode-hook 'flyspell-mode)
-      (add-hook 'prog-mode-hook 'flyspell-prog-mode)))
+      (add-hook 'text-mode-hook 'flyspell-mode)))
 #+END_SRC
 
 ** Org Mode
@@ -1132,7 +1164,12 @@ See [[http://www.emacswiki.org/emacs/TeXInputMethod#toc2][emacswiki:TeXInputMeth
       (push '("*Compile-Log*" :height 20 :noselect t) popwin:special-display-config)
       (push '(" *undo-tree*" :width 0.3 :position right) popwin:special-display-config)))
 #+END_SRC
+** jira
 
+#+begin_src emacs-lisp :tangle yes
+  (use-package xml-rpc :ensure t :defer t)
+  (use-package jira :ensure t :defer t)
+#+end_src
 * Comment Line
 
 Comment a single line, from [[http://endlessparentheses.com/implementing-comment-line.html][Endless Parenthesis]]
