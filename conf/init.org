@@ -47,7 +47,6 @@ Bootstrap [[https://github.com/jwiegley/use-package][use-package.el]] with [[htt
 #+END_SRC
 
 * Configuration
-
 ** UI/UX
 
 Start with emacs maximized (not full screen).
@@ -151,15 +150,6 @@ Which means not in =ansi-term=.
   (setq major-mode 'text-mode)
   (setq-default cursor-type 'bar)
 
-  ;; Write backup files to own directory
-  (setq backup-directory-alist
-        `((".*" . ,temporary-file-directory)))
-  (setq auto-save-file-name-transforms
-        `((".*" ,temporary-file-directory t)))
-
-  ;; Make backups of files, even when they're in version control
-  (setq vc-make-backup-files t)
-
   ;; Tabs are the devil.
   (set-default 'indent-tabs-mode nil)
 
@@ -213,7 +203,7 @@ that it doesn’t leave stray customizations behind.
 
 #+BEGIN_SRC emacs-lisp
   (defadvice load-theme (before theme-dont-propagate activate)
-    (mapcar #'disable-theme custom-enabled-themes))
+    (mapc #'disable-theme custom-enabled-themes))
 #+END_SRC
 
 Load the [[https://github.com/fniessen/emacs-leuven-theme][leuven theme]].
@@ -232,9 +222,36 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
   (use-package helm-themes   :ensure t :defer 5)
 #+END_SRC
 
-* Packages
-** Languages
-*** go
+* Org Mode
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :ensure t
+    :bind (("<f8>"  . org-cycle-agenda-files)
+           ("<f12>" . org-agenda)
+           ("C-c a" . org-agenda)
+           ("C-c b" . org-iswitchb)
+           ("C-c c" . org-capture)
+           ("C-c S" . org-store-link)
+           ("C-c l" . org-insert-link)
+           ("<f5>"   . bh/org-todo)
+           ("S-<f5>" . bh/widen)
+
+           ;; Clocking
+           ("<f9> I"  . bh/punch-in)
+           ("<f9> O"  . bh/punch-out)
+           ("<f11>"   . org-clock-goto)
+           ("C-<f11>" . org-clock-in))
+    :init
+    (use-package org-checklist :load-path "lib")
+    (use-package org-bullets :ensure t )
+    (org-babel-load-file
+     (expand-file-name "conf/org.org" user-emacs-directory)))
+#+END_SRC
+
+
+* Languages
+** go
 
 #+BEGIN_SRC emacs-lisp
   (use-package go-mode
@@ -255,7 +272,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
     (load-file "$GOPATH/src/golang.org/x/tools/refactor/rename/rename.el"))
 #+END_SRC
 
-*** haskell
+** Haskell
 
 #+BEGIN_SRC emacs-lisp
   (use-package haskell-mode
@@ -395,7 +412,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
       (use-package hindent :ensure t)))
 #+END_SRC
 
-*** rust
+** Rust
 
 #+BEGIN_SRC emacs-lisp
   (use-package rust-mode
@@ -404,7 +421,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
     :init (require 'rust-mode))
 #+END_SRC
 
-*** Ruby
+** Ruby
 
 #+BEGIN_SRC emacs-lisp
   (use-package rinari :ensure t :defer t)
@@ -422,7 +439,9 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
   (use-package robe
     :ensure t :defer t
     :init
-    (add-to-list 'company-backends 'company-robe)
+    (progn
+      (require 'company)
+      (add-to-list 'company-backends 'company-robe))
     :config
     (progn (add-hook 'ruby-mode-hook 'robe-mode)))
 
@@ -449,7 +468,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
 
 #+END_SRC
 
-*** LaTeX
+** LaTeX
 
 #+BEGIN_SRC emacs-lisp
   ;; Basic settings
@@ -480,43 +499,46 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
                               (cons "$" "$")))))
 #+END_SRC
 
-*** JavaScript
+** JavaScript
 
 #+BEGIN_SRC emacs-lisp
-  (use-package js2-mode
-    :ensure t
-    :defer t
-    :commands js2-mode
-    :init
-    (progn
-      (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-      (setq-default js2-basic-offset 2)
-      (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode)))
-    :config
-    (progn
-      (js2-imenu-extras-setup)
-      ;; (bind-key "C-x C-e" 'js-send-last-sexp js2-mode-map)
-      ;; (bind-key "C-M-x" 'js-send-last-sexp-and-go js2-mode-map)
-      ;; (bind-key "C-c b" 'js-send-buffer js2-mode-map)
-      ;; (bind-key "C-c C-b" 'js-send-buffer-and-go js2-mode-map)
-      ;; (bind-key "C-c w" 'my/copy-javascript-region-or-buffer js2-mode-map)
-      ;; (bind-key "C-c l" 'js-load-file-and-go js2-mode-map)
-      ))
+    (use-package js2-mode
+      :ensure t
+      :defer t
+      :commands js2-mode
+      :init
+      (progn
+        (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+        (setq-default js2-basic-offset 2)
+        (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode)))
+      :config
+      (progn
+        (js2-imenu-extras-setup)
+        ;; (bind-key "C-x C-e" 'js-send-last-sexp js2-mode-map)
+        ;; (bind-key "C-M-x" 'js-send-last-sexp-and-go js2-mode-map)
+        ;; (bind-key "C-c b" 'js-send-buffer js2-mode-map)
+        ;; (bind-key "C-c C-b" 'js-send-buffer-and-go js2-mode-map)
+        ;; (bind-key "C-c w" 'my/copy-javascript-region-or-buffer js2-mode-map)
+        ;; (bind-key "C-c l" 'js-load-file-and-go js2-mode-map)
+        ))
 
-  (use-package tern
-    :ensure t
-    :defer t
-    :config
-    (progn
-      (add-hook 'js2-mode-hook 'tern-mode)))
+    (use-package tern
+      :ensure t
+      :defer t
+      :config
+      (progn
+        (add-hook 'js2-mode-hook 'tern-mode)))
 
-  (use-package company-tern
-    :ensure t
-    :defer t
-    :init (add-to-list 'company-backends 'company-tern))
+    (use-package company-tern
+      :ensure t
+      :defer t
+      :init
+      (progn
+        (require 'company)
+        (add-to-list 'company-backends 'company-tern)))
 #+END_SRC
 
-*** Lispen
+** Lispen
 
 #+BEGIN_SRC emacs-lisp
   (use-package lisp-mode
@@ -533,7 +555,10 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
         (paredit-mode 1)
         (speed-of-thought-mode 1)
         (local-set-key (kbd "<return>") 'paredit-newline)
-        (add-hook 'after-save-hook 'check-parens nil t))
+        (add-hook 'after-save-hook 'check-parens nil t)
+        (add-to-list 'imenu-generic-expression
+                     '("Used Packages"
+                       "\\(^\\s-*(use-package +\\)\\(\\_<.+\\_>\\)" 2)))
       (add-hook 'lisp-mode-hook 'my-lisp-mode-hook)
       (add-hook 'emacs-lisp-mode-hook 'my-lisp-mode-hook)
       ;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
@@ -546,6 +571,40 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
 
   (use-package edit-list :ensure t :defer t :commands edit-list)
 #+END_SRC
+** CoffeeScriptoffeescript
+#+begin_src emacs-lisp :tangle yes
+  (use-package coffee-mode :ensure t :defer t
+    :mode "\\.coffee\\'")
+  ;; (use-package literate-coffee-mode :ensure t :defer t
+  ;;   :mode "\\.litcoffee\\'")
+#+end_src
+** SASS
+#+begin_src emacs-lisp :tangle yes
+  (use-package scss-mode
+    :ensure t :defer t
+    :mode ("\\.scss\\'" . scss-mode)
+    :init
+    (setq scss-compile-at-save nil))
+#+end_src
+** HAML
+#+begin_src emacs-lisp :tangle yes
+  (use-package haml-mode
+    :ensure t :defer t
+    :mode "\\.haml\\'")
+#+end_src
+
+** Markdown
+
+#+BEGIN_SRC emacs-lisp
+  (use-package markdown-mode
+    :ensure t
+    :mode (("\\`README\\.md\\'" . gfm-mode)
+           ("\\.md\\'"          . markdown-mode)
+           ("\\.markdown\\'"    . markdown-mode)))
+#+END_SRC
+
+
+* Other Packages
 ** misc
 
 #+BEGIN_SRC emacs-lisp
@@ -819,9 +878,7 @@ Load the [[https://github.com/chriskempson/base16][base16 themes]] and [[https:/
 
 #+END_SRC
 
-** god and evil
-
-*** God mode
+** God mode
 
 [[https://github.com/chrisdone/god-mode][God mode]] is a global minor mode for entering Emacs commands without
 modifier keys.
@@ -833,7 +890,7 @@ modifier keys.
     :bind ("C-z" . god-local-mode))
 #+END_SRC
 
-*** Evil mode
+** Evil mode
 
 [[http://www.emacswiki.org/emacs/Evil][Evil mode]] is a minor mode providing Vim emulation for Emacs. It
 reproduces Vim’s modal editing and even certain Ex commands.
@@ -898,24 +955,24 @@ reproduces Vim’s modal editing and even certain Ex commands.
                helm-projectile
                helm-M-x
                helm-occur)
-    :bind (("C-c h" . helm-mini)
-           ("C-h a" . helm-apropos)
-           ("C-x b" . helm-buffers-list)
-           ("M-y" . helm-show-kill-ring)
-           ("M-x" . helm-M-x)
-           ("C-x c o" . helm-occur)
-           ("C-x c y" . helm-yas-complete)
-           ("C-x c Y" . helm-yas-create-snippet-on-region)
-           ("C-x c b" . my/helm-do-grep-book-notes)
+    :bind (("C-c h"     . helm-mini)
+           ("C-h a"     . helm-apropos)
+           ("C-x b"     . helm-buffers-list)
+           ("M-y"       . helm-show-kill-ring)
+           ("M-x"       . helm-M-x)
+           ("C-x c o"   . helm-occur)
+           ("C-x c y"   . helm-yas-complete)
+           ("C-x c Y"   . helm-yas-create-snippet-on-region)
+           ("C-x c b"   . my/helm-do-grep-book-notes)
            ("C-x c SPC" . helm-all-mark-rings)
-           ("C-x l" . helm-bookmarks))
+           ("C-x l"     . helm-bookmarks))
 
     :init
     (progn
       ;; From https://gist.github.com/antifuchs/9238468
       (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
             helm-input-idle-delay 0.01  ; this actually updates things
-                                          ; reeeelatively quickly.
+                                        ; reeeelatively quickly.
             helm-yas-display-key-on-candidate t
             helm-quick-update t
             helm-M-x-requires-pattern nil
@@ -923,7 +980,11 @@ reproduces Vim’s modal editing and even certain Ex commands.
       (helm-mode))
     :config
     (progn
-      (setq helm-M-x-fuzzy-match t)
+      (setq helm-M-x-fuzzy-match        t
+            helm-buffers-fuzzy-matching t
+            helm-recentf-fuzzy-match    t
+            helm-semantic-fuzzy-match   t
+            helm-imenu-fuzzy-match      t)
       (use-package helm-config)))
 
   (use-package helm-swoop
@@ -1000,16 +1061,6 @@ reproduces Vim’s modal editing and even certain Ex commands.
     (define-key magit-status-mode-map (kbd "q") 'magit-quit-session))
 #+END_SRC
 
-** markdown-mode
-
-#+BEGIN_SRC emacs-lisp
-  (use-package markdown-mode
-    :ensure t
-    :mode (("\\`README\\.md\\'" . gfm-mode)
-           ("\\.md\\'"          . markdown-mode)
-           ("\\.markdown\\'"    . markdown-mode)))
-#+END_SRC
-
 ** multiple-cursors
 
    #+BEGIN_SRC emacs-lisp
@@ -1058,35 +1109,6 @@ reproduces Vim’s modal editing and even certain Ex commands.
     (progn
       (setq ispell-program-name "aspell")
       (add-hook 'text-mode-hook 'flyspell-mode)))
-#+END_SRC
-
-** Org Mode
-
-#+BEGIN_SRC emacs-lisp
-  (use-package org
-    :ensure t
-    :bind (("<f8>"  . org-cycle-agenda-files)
-           ("<f12>" . org-agenda)
-           ("C-c a" . org-agenda)
-           ("C-c b" . org-iswitchb)
-           ("C-c c" . org-capture)
-           ("C-c S" . org-store-link)
-           ("C-c l" . org-insert-link)
-           ("<f5>"   . bh/org-todo)
-           ("S-<f5>" . bh/widen)
-
-           ;; Clocking
-           ("<f9> I"  . bh/punch-in)
-           ("<f9> O"  . bh/punch-out)
-           ("<f11>"   . org-clock-goto)
-           ("C-<f11>" . org-clock-in))
-    :init
-    (use-package org-checklist :load-path "lib")
-    (use-package org-bullets :ensure t )
-    (org-babel-load-file
-     (expand-file-name "conf/org.org" user-emacs-directory)))
-
-
 #+END_SRC
 
 ** undo-tree
@@ -1169,6 +1191,29 @@ See [[http://www.emacswiki.org/emacs/TeXInputMethod#toc2][emacswiki:TeXInputMeth
 #+begin_src emacs-lisp :tangle yes
   (use-package xml-rpc :ensure t :defer t)
   (use-package jira :ensure t :defer t)
+#+end_src
+* Gnus
+
+#+begin_src emacs-lisp :tangle yes
+  (setq gnus-select-method
+        '(nntp "news.eternal-september.org"
+               (nntp-port-number 119)))
+
+  ;; Tree view for groups.
+  ;; (add-hook 'gnus-group-mode-hook 'gnus-topic-mode)
+
+  ;; Also, I prefer to see only the top level message. If a message has
+  ;; several replies or is part of a thread, only show the first
+  ;; message. 'gnus-thread-ignore-subject' will ignore the subject and
+  ;; look at 'In-Reply-To:' and 'References:' headers.
+  ;; (setq gnus-thread-hide-subtree t)
+  ;; (setq gnus-thread-ignore-subject t)
+#+end_src
+
+** Spam
+
+#+begin_src emacs-lisp :tangle yes
+
 #+end_src
 * Comment Line
 

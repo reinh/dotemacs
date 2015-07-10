@@ -75,6 +75,16 @@ Most of this is taken from http://doc.norang.ca/org-mode.html
   (setq org-log-into-drawer t)
   (setq org-log-state-notes-insert-after-drawers nil)
 #+END_SRC
+* imenu config
+#+begin_src emacs-lisp :tangle yes
+  (defun reinh:setup-imenu-for-use-package ()
+    "Recognize `use-package` in imenu"
+    (add-to-list
+     'imenu-generic-expression
+     '("Used Packages"
+       "^\\s-*(\\(use-package\\)\\s-+\\(\\(\\sw\\|\\s_\\)+\\)" 2)))
+  (add-hook 'org-mode-hook 'reinh:setup-imenu-for-use-package)
+#+end_src
 * Agenda files
 
 #+BEGIN_SRC emacs-lisp
